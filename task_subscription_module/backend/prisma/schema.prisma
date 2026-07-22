@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int                 @id @default(autoincrement())
+  name          String
+  email         String              @unique
+  mobile        String
+  password      String
+  createdAt     DateTime            @default(now())
+
+  subscriptions UserSubscription[]
+  payments      PaymentHistory[]
+}
+
+model SubscriptionPlan {
+  id           Int                 @id @default(autoincrement())
+  planName     String
+  description  String
+  price        Float
+  billingType  String
+  features     String
+  stripePriceId String?
+  status       String              @default("ACTIVE")
+
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id                  Int      @id @default(autoincrement())
+
+  userId              Int
+  planId              Int
+
+  status              String
+
+  startDate           DateTime @default(now())
+
+  endDate             DateTime?
+
+  billingCycle        String
+
+  cancelAtPeriodEnd   Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  payments PaymentHistory[]
+}
+
+model PaymentHistory {
+
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  subscriptionId Int
+
+  amount Float
+
+  paymentStatus String
+
+  paymentDate DateTime @default(now())
+
+  stripeSessionId String?
+
+  paymentIntent String?
+
+  currency String @default("INR")
+
+  user User @relation(fields: [userId], references: [id])
+
+  subscription UserSubscription @relation(fields: [subscriptionId], references: [id])
+}
